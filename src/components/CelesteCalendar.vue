@@ -1,7 +1,7 @@
 <template>
   <div id='app'>
     {{ getMonthRange() }}
-    <vue-picture-swipe :items="[]"></vue-picture-swipe>
+    <!--<vue-picture-swipe :items="[]"></vue-picture-swipe> -->
     <div class="month">      
       <ul>
         <li v-on:click='month -= 1' class="prev">&#10094;</li>
@@ -32,36 +32,25 @@
 </template>
 
 <script>
-import PhotoSwipe from 'photoswipe/dist/photoswipe';
-import * as DefaultPhotoSwipeUI from 'photoswipe/dist/photoswipe-ui-default';
+//import PhotoSwipe from 'photoswipe/dist/photoswipe';
+//import * as DefaultPhotoSwipeUI from 'photoswipe/dist/photoswipe-ui-default';
 
 export default {
     name: 'celeste-calendar',
     data() {
       return {
         month: 3,
-        year: 2020,
-        items: [{
-          src: 'http://via.placeholder.com/600x400',
-          thumbnail: 'http://via.placeholder.com/64x64',
-          w: 600,
-          h: 400,
-          alt: 'some numbers on a grey background' // optional alt attribute for thumbnail image
-        },
-        {
-          src: 'http://via.placeholder.com/1200x900',
-          w: 1200,
-          h: 900
-        }]  
+        year: 2020
       }
     },
     methods: {
+        // returns the date based on startDate from the calendar 
         getDay (dayIndex) {
             var day = dayIndex - this.firstDayOfWeek;
             if (day <= 0 || day > this.numOfDays)
                 day = '_';
             return day; 
-        },
+        }, 
         getMonthName(monthIndex) {
             var today = new Date();
             today.setYear(this.year)
@@ -75,6 +64,7 @@ export default {
             today.setMonth(monthIndex);
             return (today.getYear() + 1900);
         },
+        // returns the start and end day based on day of the week of the specified month
         getMonthRange() { 
             var currentDate = new Date();
             currentDate.setMonth(this.month + 1);
@@ -84,21 +74,24 @@ export default {
             currentDate.setDate(1);
             this.firstDayOfWeek = currentDate.getDay();
         },
-        isInRange(day, week) {
-            if (this.getDay(day, week) != 0)
-                return true
-            return false
-        },
         dateClicked() {
-          console.log("clicked");
-          const pswpElement = document.querySelectorAll('.pswp')[0];
-          const gallery = new PhotoSwipe(pswpElement, DefaultPhotoSwipeUI,
-          this.items,
-          {
-            captionEl: false,
-            shareEl: false,
-          });
-          gallery.init();
+          if(event.target.firstChild.nodeValue != "_")
+            console.log("Not empty");
+          //const pswpElement = document.querySelectorAll('.pswp')[0];
+          //const gallery = new PhotoSwipe(pswpElement, DefaultPhotoSwipeUI,
+          //this.items,
+          //{
+          //  captionEl: false,
+          //  shareEl: false,
+          //});
+          //gallery.init();
+        },
+        getS3Location(day) {
+          var today = new Date();
+            today.setYear(this.year)
+            today.setMonth(this.month);
+            today.setDate(day);
+            console.log(today);
         },
         getPictureCount(day) {
           return day;
