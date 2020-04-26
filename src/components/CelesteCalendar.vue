@@ -1,47 +1,79 @@
 <template>
-    <div id='app' style="overflow-x:auto;">
+  <div id='app'>
     {{ getMonthRange() }}
-    <table border='1'>
-        <thead>
-            <tr><th colspan='7'>{{ getMonthName(month) }}</th></tr>
-            <tr>
-            <th>Sunday</th>
-            <th>Monday</th>
-            <th>Tuesday</th>
-            <th>Wednesday</th>
-            <th>Thursday</th>
-            <th>Friday</th>
-            <th>Saturday</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr v-for='week in 5' :key='week'>
-                <td v-for='day in 7' :key='day'><div v-show='isInRange(day, week)' class="content">{{ getDay(day, week) }}</div>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <vue-picture-swipe :items="[]"></vue-picture-swipe>
+    <div class="month">      
+      <ul>
+        <li v-on:click='month -= 1' class="prev">&#10094;</li>
+        <li v-on:click='month += 1' class="next">&#10095;</li>
+        <li>
+          {{ getMonthName(month) }}<br>
+          <span> {{ getYearName(month) }}</span>
+        </li>
+      </ul>
     </div>
+
+    <ul class="weekdays">
+      <li>Sunday</li>
+      <li>Monday</li>
+      <li>Tuesday</li>
+      <li>Wednesday</li>
+      <li>Thursday</li>
+      <li>Friday</li>
+      <li>Saturday</li>
+    </ul>
+    
+    <div class='days'>
+    <ul>
+      <li v-on:click='dateClicked()' v-for='day in 42' :key='day'>{{getDay(day)}}<div class='my-gallery'>{{ getPictureCount(getDay(day)) }}</div></li>
+    </ul>
+    </div>
+  </div>
 </template>
 
 <script>
+import PhotoSwipe from 'photoswipe/dist/photoswipe';
+import * as DefaultPhotoSwipeUI from 'photoswipe/dist/photoswipe-ui-default';
+
 export default {
     name: 'celeste-calendar',
-    props: {
-        month: Number
+    data() {
+      return {
+        month: 3,
+        year: 2020,
+        items: [{
+          src: 'http://via.placeholder.com/600x400',
+          thumbnail: 'http://via.placeholder.com/64x64',
+          w: 600,
+          h: 400,
+          alt: 'some numbers on a grey background' // optional alt attribute for thumbnail image
+        },
+        {
+          src: 'http://via.placeholder.com/1200x900',
+          w: 1200,
+          h: 900
+        }]  
+      }
     },
     methods: {
-        getDay (dayIndex, weekIndex) {
-            console.log(this.firstDayOfWeek)
-            var day = (dayIndex + ((weekIndex - 1) * 7)) - this.firstDayOfWeek;
+        getDay (dayIndex) {
+            var day = dayIndex - this.firstDayOfWeek;
             if (day <= 0 || day > this.numOfDays)
-                return 0
+                day = '_';
             return day; 
         },
         getMonthName(monthIndex) {
             var today = new Date();
+            today.setYear(this.year)
             today.setMonth(monthIndex);
-            return today.toLocaleString('default', {month: 'long'});
+            var currentMonth = today.toLocaleString('default', {month: 'long'});
+            return currentMonth;
+        },
+        getYearName(monthIndex) {
+            var today = new Date();
+            today.setYear(this.year)
+            today.setMonth(monthIndex);
+            return (today.getYear() + 1900);
         },
         getMonthRange() { 
             var currentDate = new Date();
@@ -56,47 +88,99 @@ export default {
             if (this.getDay(day, week) != 0)
                 return true
             return false
+        },
+        dateClicked() {
+          console.log("clicked");
+          const pswpElement = document.querySelectorAll('.pswp')[0];
+          const gallery = new PhotoSwipe(pswpElement, DefaultPhotoSwipeUI,
+          this.items,
+          {
+            captionEl: false,
+            shareEl: false,
+          });
+          gallery.init();
+        },
+        getPictureCount(day) {
+          return day;
         }
+      }
     }
-}
 </script>
 
 <style scoped>
-table {
-    width: 100%;
+* {box-sizing: border-box;}
+ul {list-style-type: none;}
+
+.month {
+  padding: 70px 25px;
+  background: #1abc9c;
+  text-align: center;
+  border: 1px solid black;
 }
-thead {
-    align: center ;
+
+.month ul {
+  margin: 0;
+  padding: 0;
 }
-td {
-    width: calc(100% / 7) ;
-    height: calc(100% / 7) ;
-    vertical-align: top ;
-    text-align: left ;
-    position: relative ;
+
+.month ul li {
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 3px;
 }
-td:after {
-    content: '' ;
-    display: block ;
-    margin-top: 100% ;
+
+.month .prev {
+  float: left;
+  cursor: pointer;
 }
-td .content {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
+
+.month .next {
+  float: right;
+  padding-top: 10px;
+  cursor: pointer;
 }
-@media only screen and (max-width: 1080px) {
-    table{
-        width: 1080px ;
-    }
+
+.weekdays {
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+  margin: 0;
+  padding: 10px 0;
+  background-color: #ddd;
+}
+
+.weekdays li {
+  display: inline-block;
+  width: calc(100% / 7) ;
+  color: #666;
+  text-align: center;
+}
+
+.days {
+  background-color: #eee;
+  height: 100%;
+}
+
+.days ul {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  text-align: left;
+}
+
+.days ul li {
+  font-size: 30px;
+  list-style: none;
+  flex: 0 0 calc(100% / 7);
+  height: calc(100vh / 6) ;
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.days .my-gallery {
+  text-align: right;
+  font-size: 18px;
 }
 </style>
-
-<!--- 
-TODO:
-- Get new Date.now(), d.getDay()
-- Button to go to birthday
-- Pull file names from s3
--->
