@@ -1,11 +1,10 @@
 <template>
   <div id='app'>
-    {{ getMonthRange() }}
-    <!--<vue-picture-swipe :items="[]"></vue-picture-swipe> -->
-    <div class="month">      
+    <vue-picture-swipe :items="[]"></vue-picture-swipe>
+    <div class="month">
       <ul>
-        <li v-on:click='month -= 1' class="prev">&#10094;</li>
-        <li v-on:click='month += 1' class="next">&#10095;</li>
+        <li v-on:click='month -= 1, picturesObtained = false' class="prev">&#10094;</li>
+        <li v-on:click='month += 1, picturesObtained = false' class="next">&#10095;</li>
         <li>
           {{ getMonthName(month) }}<br>
           <span> {{ getYearName(month) }}</span>
@@ -25,23 +24,35 @@
     
     <div class='days'>
     <ul>
-      <li v-on:click='dateClicked()' v-for='day in 42' :key='day'>{{getDay(day)}}<div class='my-gallery'>{{ getPictureCount(getDay(day)) }}</div></li>
+      <li v-on:click='dateClicked()' v-for='day in 42' :key='day'>{{getDay(day)}}<div class='my-gallery' :key='picturesObtained'>{{getPicturesSize(day)}}</div></li>
     </ul>
     </div>
   </div>
 </template>
 
 <script>
-//import PhotoSwipe from 'photoswipe/dist/photoswipe';
-//import * as DefaultPhotoSwipeUI from 'photoswipe/dist/photoswipe-ui-default';
+var AWS = require('aws-sdk');
+var probe = require('probe-image-size');
+import PhotoSwipe from 'photoswipe/dist/photoswipe';
+import * as DefaultPhotoSwipeUI from 'photoswipe/dist/photoswipe-ui-default';
 
 export default {
     name: 'celeste-calendar',
     data() {
       return {
         month: 3,
-        year: 2020
+        year: 2020,
+        baseUrl: 'https://martinez-family.s3.us-west-2.amazonaws.com/',
+        picturesObtained: false
       }
+    },
+    created() {
+      this.getMonthRange();
+      this.cacheS3Contents();
+    },
+    beforeUpdate() {
+      this.getMonthRange();
+      this.cacheS3Contents();
     },
     methods: {
         // returns the date based on startDate from the calendar 
@@ -53,14 +64,14 @@ export default {
         }, 
         getMonthName(monthIndex) {
             var today = new Date();
-            today.setYear(this.year)
+            today.setYear(this.year);
             today.setMonth(monthIndex);
             var currentMonth = today.toLocaleString('default', {month: 'long'});
             return currentMonth;
         },
         getYearName(monthIndex) {
             var today = new Date();
-            today.setYear(this.year)
+            today.setYear(this.year);
             today.setMonth(monthIndex);
             return (today.getYear() + 1900);
         },
@@ -75,26 +86,74 @@ export default {
             this.firstDayOfWeek = currentDate.getDay();
         },
         dateClicked() {
-          if(event.target.firstChild.nodeValue != "_")
-            console.log("Not empty");
-          //const pswpElement = document.querySelectorAll('.pswp')[0];
-          //const gallery = new PhotoSwipe(pswpElement, DefaultPhotoSwipeUI,
-          //this.items,
-          //{
-          //  captionEl: false,
-          //  shareEl: false,
-          //});
-          //gallery.init();
+          if(event.target.firstChild.nodeValue != "_") {
+            var pictures = this.getPictures(event.target.firstChild.nodeValue)
+            var items = []
+            for(let picture in pictures) {
+              probe(pictures[picture], function (err, result) {
+                var item = {
+                  src: pictures[picture],
+                  w: result.width,
+                  h: result.height
+                }
+                items.push(item)
+                if(items.length == pictures.length) {
+                  const pswpElement = document.querySelectorAll('.pswp')[0];
+                  const gallery = new PhotoSwipe(pswpElement, DefaultPhotoSwipeUI,
+                  items,
+                  {
+                    captionEl: false,
+                    shareEl: false,
+                  });
+                  gallery.init(); 
+                }
+              });
+            }
+          }
         },
-        getS3Location(day) {
-          var today = new Date();
-            today.setYear(this.year)
+        cacheS3Contents() {
+          let s3 = new AWS.S3({region: 'us-west-2'});
+          var params = {
+            Bucket: "martinez-family",
+            Prefix: this.getS3Location(),
+            MaxKeys: 100
+          }
+          s3.makeUnauthenticatedRequest('listObjectsV2', params, (err, data) => {
+            if (err) {
+              console.log(err, err.stack);
+            }
+            else {
+              console.log(data);
+              this.s3Contents = data.Contents;
+              this.picturesObtained = true;
+              return data;
+            }
+          });
+        },
+        getS3Location() {
+            var today = new Date();
+            today.setYear(this.year);
             today.setMonth(this.month);
-            today.setDate(day);
-            console.log(today);
+            var year = (today.getYear() + 1900) + '/';
+            var month = today.getMonth() + 1;
+            month = month < 10 ? '0' + month : month;
+            return year + month + '/';
         },
-        getPictureCount(day) {
-          return day;
+        getPictures(day) {
+          var pictures = []
+          for(let pictureIndex in this.s3Contents) {
+            var content = this.s3Contents[pictureIndex];
+            var formattedDay = day < 10 ? '0' + day : day;
+            var dayStamp = this.getS3Location().replace(/\//g, '')+formattedDay;
+            if (content.Key.includes(dayStamp)) {
+              pictures.push(this.baseUrl + content.Key);
+            }
+          }
+          return pictures;
+        },
+        getPicturesSize(day) {
+          var pictures = this.getPictures(this.getDay(day))
+          return pictures.length > 0 ? pictures.length + ' pics' : ''; 
         }
       }
     }

@@ -9,6 +9,9 @@
   },
   "dependencies": {
     "core-js": "^3.6.4",
+    "image-size": "^0.8.3",
+    "probe-image-size": "^5.0.0",
+    "request-image-size": "^2.1.0",
     "vue": "^2.6.11",
     "vue-picture-swipe": "^1.2.0"
   },
