@@ -91,6 +91,8 @@ export default {
             var items = []
             for(let picture in pictures) {
               probe(pictures[picture], function (err, result) {
+                console.log('error: ', err)
+                console.log('result: ', result)
                 var item = {
                   src: pictures[picture],
                   w: result.width,
@@ -98,6 +100,7 @@ export default {
                 }
                 items.push(item)
                 if(items.length == pictures.length) {
+                  console.log(items)
                   const pswpElement = document.querySelectorAll('.pswp')[0];
                   const gallery = new PhotoSwipe(pswpElement, DefaultPhotoSwipeUI,
                   items,
