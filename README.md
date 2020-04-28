@@ -1,24 +1,3 @@
-# omrta
+# Portfolio
 
-## Project setup
-```
-npm install
-```
-
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+Currently the landing page is a Calendar that pulls images from an s3 bucket and maps them to the correct year/month/day. Clicking on an image will pull up the images for that day.
