@@ -1,0 +1,36 @@
+$colors: (
+  background: lighten(black, 8%),
+  foreground: lighten(black, 16%),
+  text: #fff,
+
+  primary: (
+    base: #715f65,
+    light: #f5a3b7,
+    lighter: #fee2e3,
+    empty: #c0bccc,
+    blue_: #8498af,
+    blue_hover: lighten(#8498af, 16%)
+  ),
+
+  secondary: (
+
+  )
+);
+
+$color-prefix: --color;
+
+@function color($color-name, $color-variant:null, $true-val:true) {
+  @if $true-val == true {
+    @if ($color-variant != null) {
+      @return map-get(map-get($colors,$color-name),$color-variant);
+    } @else {
+      @return map-get($colors,$color-name);
+    }
+  } @else {
+    @if ($color-variant != null) {
+      @return var(#{$color-prefix}-#{$color-name}-#{$color-variant});
+    } @else {
+      @return var(#{$color-prefix}-#{$color-name});
+    }
+  }
+};

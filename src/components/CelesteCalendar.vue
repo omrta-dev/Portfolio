@@ -1,32 +1,28 @@
 <template>
-  <div id='app'>
-    <vue-picture-swipe :items="[]"></vue-picture-swipe>
-    <div class="month">
-      <ul>
-        <li v-on:click='month -= 1, picturesObtained = false' class="prev">&#10094;</li>
-        <li v-on:click='month += 1, picturesObtained = false' class="next">&#10095;</li>
-        <li>
-          {{ getMonthName(month) }}<br>
-          <span> {{ getYearName(month) }}</span>
-        </li>
-      </ul>
+  <div class='calendar'>
+    <vue-picture-swipe :items='[]'></vue-picture-swipe>
+    <div class="calendar__month">
+        <div v-on:click='month -= 1' class='calendar__month__prev'>&#10094;</div>
+        <div>{{ getMonthName(month) }}<br>{{ getYearName(month) }}</div>
+        <div v-on:click='month += 1' class='calendar__month__next'>&#10095;</div>
     </div>
 
-    <ul class="weekdays">
-      <li>Sunday</li>
-      <li>Monday</li>
-      <li>Tuesday</li>
-      <li>Wednesday</li>
-      <li>Thursday</li>
-      <li>Friday</li>
-      <li>Saturday</li>
-    </ul>
-    
-    <div class='days'>
-    <ul>
-      <li v-on:click='dateClicked()' v-for='day in 42' :key='day'>{{getDay(day)}}<div class='my-gallery' :key='picturesObtained'>{{getPicturesSize(day)}}</div></li>
-    </ul>
+    <div class="calendar__weekday">
+      <div>Sunday</div>
+      <div>Monday</div>
+      <div>Tuesday</div>
+      <div>Wednesday</div>
+      <div>Thursday</div>
+      <div>Friday</div>
+      <div>Saturday</div>
     </div>
+    
+    <div class='calendar__day' :class='{"calendar__day--visible":showCalendar}'>
+      <div class='calendar__day__grid'>
+        <div v-on:click='dateClicked' v-for='day in 42' :key='day'>{{getDay(day)}}<div class='my-gallery' :key='picturesObtained'>{{getPicturesSize(day)}}</div></div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -43,7 +39,8 @@ export default {
         month: 3,
         year: 2020,
         baseUrl: 'https://martinez-family.s3.us-west-2.amazonaws.com/',
-        picturesObtained: false
+        picturesObtained: false,
+        showCalendar: false
       }
     },
     created() {
@@ -157,85 +154,89 @@ export default {
         getPicturesSize(day) {
           var pictures = this.getPictures(this.getDay(day))
           return pictures.length > 0 ? pictures.length + ' pics' : ''; 
+        },
+      },
+      watch: {
+        month: {
+          handler(month) {
+            this.month = month;
+            this.picturesObtained = false;
+            this.showCalendar = false;
+            setTimeout(() => {this.showCalendar = true}, 250);
+          },
+          immediate: true,
         }
       }
     }
 </script>
 
-<style scoped>
-* {box-sizing: border-box;}
-ul {list-style-type: none;}
+<style lang='scss'>
 
-.month {
-  padding: 70px 25px;
-  background: #1abc9c;
-  text-align: center;
-  border: 1px solid black;
-}
-
-.month ul {
-  margin: 0;
-  padding: 0;
-}
-
-.month ul li {
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-}
-
-.month .prev {
-  float: left;
-  cursor: pointer;
-}
-
-.month .next {
-  float: right;
-  padding-top: 10px;
-  cursor: pointer;
-}
-
-.weekdays {
-  border-left: 1px solid black;
-  border-right: 1px solid black;
-  margin: 0;
-  padding: 10px 0;
-  background-color: #ddd;
-}
-
-.weekdays li {
-  display: inline-block;
-  width: calc(100% / 7) ;
-  color: #666;
-  text-align: center;
-}
-
-.days {
-  background-color: #eee;
-  height: 100%;
-}
-
-.days ul {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  text-align: left;
-}
-
-.days ul li {
-  font-size: 30px;
-  list-style: none;
-  flex: 0 0 calc(100% / 7);
-  height: calc(100vh / 6) ;
-  border: 1px solid black;
+.calendar {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-}
+  flex: 1 1 auto;
 
-.days .my-gallery {
-  text-align: right;
-  font-size: 18px;
+  &__month, &__weekday {
+    display: flex;
+    place-items: center;
+    text-align: center;
+  }
+
+  &__month {
+    background-color: color('primary', 'base');
+
+    &__prev {
+      flex-grow: 1;
+      text-align: left;
+      padding-left: 2rem;
+    }
+
+    &__next {
+      flex-grow: 1;
+      text-align: right;
+      padding-right: 2rem;
+    }
+
+    &__prev:hover, &__next:hover {
+      cursor: pointer;
+    }
+  }
+
+  &__weekday {
+    background-color: color('primary', 'light');
+  }
+
+  &__weekday > div {
+    flex-grow: 1;
+  }
+
+  &__day {
+    display:flex;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.25s ease-in;
+
+    &__grid {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-rows: repeat(6, 1fr);
+      grid-template-columns: repeat(7, 1fr);
+
+      & > div {
+        border: dotted 1px black;
+        background-color: color('primary', 'blue_hover');
+      }
+
+      & > div:hover {
+        background-color: color('primary', 'blue_');
+      }
+    }
+
+    &--visible {
+        opacity: 1;
+    }
+
+  }
 }
 </style>
